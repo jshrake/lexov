@@ -1,15 +1,20 @@
 [submodule "dep/soil"]
 	path = dep/soil
 	url = https://github.com/cosmicorganism/soil
+        dirty = ignore
 [submodule "dep/glm"]
 	path = dep/glm
 	url = https://github.com/g-truc/glm
+        dirty = ignore
 [submodule "dep/glfw"]
 	path = dep/glfw
 	url = https://github.com/glfw/glfw
+        dirty = ignore
 [submodule "dep/mogl"]
 	path = dep/mogl
 	url = file:////Users/justin/dev/mogl
+        dirty = ignore
 [submodule "dep/glew"]
 	path = dep/glew
 	url = https://github.com/nigels-com/glew
+        dirty = ignore
