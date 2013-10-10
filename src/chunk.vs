@@ -1,16 +1,20 @@
-#version 150
+#version 410
 
 in vec4 cube_pos;
 uniform vec3 chunk_pos;
 uniform vec3 normal;
 uniform mat4 vp_matrix;
-out vec4 frag_color;
-
+uniform samplerBuffer texture;
+out vec4 f_color;
 void main() {
-  if (normal == vec3(0.0, 1.0, 0.0)) {
-    frag_color = vec4(1.0, 0.0, 0.0, 1.0);
-  } else {
-    frag_color = vec4(0.0, 0.0, 1.0, 1.0);
-  }
-  gl_Position = vp_matrix * vec4(vec3(cube_pos) + chunk_pos, 1);
+  int offset = 4 * int(cube_pos.w);
+  if (normal.y == 1 && int(cube_pos.w) == 2) {
+    offset = 4;
+  } 
+  float r = texelFetch(texture, offset + 0).r;
+  float g = texelFetch(texture, offset + 1).r;
+  float b = texelFetch(texture, offset + 2).r;
+  float a = texelFetch(texture, offset + 3).r;
+  f_color = vec4(r, g, b, a);
+  gl_Position = vp_matrix * vec4(cube_pos.xyz + chunk_pos, 1);
 }

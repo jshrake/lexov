@@ -24,14 +24,18 @@ private:
       std::unordered_map<chunk_key, chunk_mesh, chunk_hash, chunk_hash_equal>;
   chunk_mesh_map meshes;
   mogl::program shader_program;
+  GLuint texture_buffer;
   GLuint cube_pos_attrib_id;
   GLuint chunk_pos_uniform_id;
   GLuint normal_uniform_id;
   GLuint camera_pos_uniform_id;
+  GLuint texture_id;
+  GLuint texture_uniform_id; 
   static const std::string cube_pos_attrib_name;
   static const std::string chunk_pos_uniform_name;
   static const std::string normal_uniform_name;
   static const std::string camera_pos_uniform_name;
+  static const std::string texture_uniform_name;
   
 };
 

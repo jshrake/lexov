@@ -20,12 +20,15 @@ public:
   bool is_solid(const local_size_t x, const local_size_t y,
                 const local_size_t z) const;
 
+  bool is_transparent(const local_size_t x, const local_size_t y,
+                      const local_size_t z) const;
+
   template <face face>
   bool is_face_visible(const local_size_t x, const local_size_t y,
                        const local_size_t z) const;
 
   template <face face>
-  void set_neighbor(const std::shared_ptr<chunk_base const> &neighbor);
+  void set_neighbor(std::shared_ptr<chunk_base const> neighbor);
 
   bool is_dirty() const;
   void mark_dirty() const;
@@ -40,6 +43,9 @@ private:
 
   virtual bool is_solid_impl(const local_size_t x, const local_size_t y,
                              const local_size_t z) const = 0;
+
+  virtual bool is_transparent_impl(const local_size_t x, const local_size_t y,
+                                   const local_size_t z) const = 0;
 
   // Maintain weak pointers to neighboring chunks
   using weak_chunk_ptr = std::weak_ptr<chunk_base const>;
@@ -64,8 +70,7 @@ void chunk_base<W, H, D>::set(const local_size_t x, const local_size_t y,
                          const local_size_t z, const block_type type) {
   set_impl(x, y, z, type);
   static const auto mark_neighbor_dirty = [](const weak_chunk_ptr & ptr) {
-    auto neighbor = ptr.lock();
-    if (neighbor) {
+    if (auto neighbor = ptr.lock()) {
       neighbor->mark_dirty();
     }
   };
@@ -97,6 +102,11 @@ bool chunk_base<W, H, D>::is_solid(const local_size_t x, const local_size_t y,
   return is_solid_impl(x, y, z);
 }
 
+template <local_size_t W, local_size_t H, local_size_t D>
+bool chunk_base<W, H, D>::is_transparent(const local_size_t x, const local_size_t y,
+                              const local_size_t z) const {
+  return is_transparent_impl(x, y, z);
+}
 
 template <local_size_t W, local_size_t H, local_size_t D>
 template <face face>
@@ -108,9 +118,8 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
   static const auto check_neighbor = [](
       const weak_chunk_ptr & ptr, const local_size_t x, const local_size_t y,
       const local_size_t z) {
-    auto neighbor = ptr.lock();
-    if (neighbor) {
-      return !neighbor->is_solid(x, y, z);
+    if (auto neighbor = ptr.lock()) {
+      return !neighbor->is_solid(x, y, z) || neighbor->is_transparent(x, y, z);
     } else {
       return true;
     }
@@ -120,17 +129,17 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
     if (z == 0) {
       return check_neighbor(front_neighbor, x, y, D - 1);
     } else {
-      return !is_solid(x, y, z - 1);
+      return !is_solid(x, y, z - 1) || is_transparent(x, y, z - 1);
     }
   case face::back:
     if (z == depth - 1) {
       return check_neighbor(back_neighbor, x, y, 0);
     } else {
-      return !is_solid(x, y, z + 1);
+      return !is_solid(x, y, z + 1) || is_transparent(x, y, z + 1);
     }
   case face::left:
     if (x == 0) {
-      return check_neighbor(left_neighbor, W - 1, y, z);
+      return check_neighbor(left_neighbor, width - 1, y, z);
     } else {
       return !is_solid(x - 1, y, z);
     }
@@ -138,19 +147,19 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
     if (x == width - 1) {
       return check_neighbor(right_neighbor, 0, y, z);
     } else {
-      return !is_solid(x + 1, y, z);
+      return !is_solid(x + 1, y, z) || is_transparent(x+1, y, z);
     }
   case face::top:
     if (y == height - 1) {
       return check_neighbor(top_neighbor, x, 0, z);
     } else {
-      return !is_solid(x, y + 1, z);
+      return !is_solid(x, y + 1, z) || is_transparent(x, y+1, z);
     }
   case face::bottom:
     if (y == 0) {
       return check_neighbor(bottom_neighbor, x, height - 1, z);
     } else {
-      return !is_solid(x, y - 1, z);
+      return !is_solid(x, y - 1, z) || is_transparent(x, y-1, z);
     }
   }
 }
@@ -158,7 +167,8 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
 template <local_size_t W, local_size_t H, local_size_t D>
 template <face face>
 void
-chunk_base<W, H, D>::set_neighbor(const std::shared_ptr<chunk_base const> &neighbor) {
+chunk_base<W, H, D>::set_neighbor(std::shared_ptr<chunk_base const> neighbor) {
+  mark_dirty();
   switch (face) {
   case face::front:
     front_neighbor = neighbor;

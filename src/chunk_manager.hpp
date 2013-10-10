@@ -18,7 +18,7 @@ public:
   void update();
 
 private:
-  void insert_chunk(const chunk_key &key, const chunk_ptr &ptr); 
+  void insert_chunk(const chunk_key &key, chunk_ptr ptr); 
   void remove_chunk(const chunk_key &key);
   chunk_renderer &renderer;
 

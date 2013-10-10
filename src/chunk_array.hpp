@@ -12,7 +12,7 @@ public:
 
 private:
   using chunk_data = std::array<block_type, chunk_base_whd::volume>;
-  chunk_data data;
+  chunk_data data{};
 
   block_type get_impl(const local_size_t x, const local_size_t y,
                       const local_size_t z) const override;
@@ -20,7 +20,8 @@ private:
                 const block_type type) override;
   bool is_solid_impl(const local_size_t x, const local_size_t y,
                      const local_size_t z) const override;
-};
+  bool is_transparent_impl(const local_size_t x, const local_size_t y,
+                     const local_size_t z) const override;};
 
 template <local_size_t W, local_size_t H, local_size_t D>
 block_type
@@ -47,4 +48,11 @@ bool array_chunk<W, H, D>::is_solid_impl(const local_size_t x,
   return data[x + H * y + H * D * z] != block_type::air;
 }
 
+template <local_size_t W, local_size_t H, local_size_t D>
+bool array_chunk<W, H, D>::is_transparent_impl(const local_size_t ,
+                                         const local_size_t ,
+                                         const local_size_t ) const {
+  //return data[x + H * y + H * D * z] == block_type::water;
+  return false;
+}
 } // namespace lexov

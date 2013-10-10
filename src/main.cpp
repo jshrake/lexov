@@ -5,7 +5,7 @@
 
 int main() {
   try {
-    auto width = 640, height = 420;
+    auto width = 1440, height = 900;
     auto title = "lexov!";
     auto fullscreen = false;
 

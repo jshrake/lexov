@@ -3,8 +3,8 @@
 
 class fixed_timestep_game {
 public:
-  using clock = std::chrono::high_resolution_clock;
-  using delta_time = std::chrono::duration<double, std::ratio<1, 60>>;
+using clock = std::chrono::high_resolution_clock;
+using delta_time = std::chrono::duration<double, std::ratio<1, 60>>;
   virtual ~fixed_timestep_game() = default;
 
   void start(); 
@@ -12,7 +12,7 @@ public:
 protected:
   virtual void load_content();
 
-  virtual void pre_update();
+  virtual void pre_update(const delta_time &);
   virtual void update(const delta_time &) = 0;
   virtual void post_update(const double);
 

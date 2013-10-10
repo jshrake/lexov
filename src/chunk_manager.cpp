@@ -1,16 +1,65 @@
 #include "chunk_manager.hpp"
 #include "chunk_generator.hpp"
 #include "chunk_renderer.hpp"
+#include <cassert>
 
 namespace lexov {
-chunk_manager::chunk_manager(chunk_renderer &cr)
-    : renderer{ cr } {
-      insert_chunk(chunk_key{0, 0, 0}, chunk_generator::make_50_50_chunk(block_type::grass));
+chunk_manager::chunk_manager(chunk_renderer &cr) : renderer{ cr } {
+  for (world_size_t z = 0; z < world_depth; ++z) {
+    for (world_size_t y = 0; y < world_height; ++y) {
+      for (world_size_t x = 0; x < world_width; ++x) {
+        const auto k = chunk_key{x, y, z};
+        insert_chunk(k,
+                     chunk_generator::make_floating_rock(k));
+      }
     }
+  }
+}
 
-void chunk_manager::insert_chunk(const chunk_key &key, const chunk_ptr &ptr) {
-  all_chunks.insert(std::make_pair(key, ptr));
+void chunk_manager::insert_chunk(const chunk_key &key, chunk_ptr ptr) {
+  // set up chunk neighbors
+  const auto x = std::get<0>(key);
+  const auto y = std::get<1>(key);
+  const auto z = std::get<2>(key);
+  const auto front_itr = all_chunks.find({x, y, z - 1});
+  if (front_itr != all_chunks.cend()) {
+    const auto neighbor = front_itr->second;
+    neighbor->set_neighbor<face::back>(ptr);
+    ptr->set_neighbor<face::front>(neighbor);
+  }
+  const auto back_itr = all_chunks.find({x, y, z + 1});
+  if (back_itr != all_chunks.cend()) {
+    const auto neighbor = back_itr->second;
+    neighbor->set_neighbor<face::front>(ptr);
+    ptr->set_neighbor<face::back>(neighbor);
+  }
+  const auto left_itr = all_chunks.find({x - 1, y, z});
+  if (left_itr != all_chunks.cend()) {
+    const auto neighbor = left_itr->second;
+    neighbor->set_neighbor<face::right>(ptr);
+    ptr->set_neighbor<face::left>(neighbor);
+  }
+  const auto right_itr = all_chunks.find({x + 1, y, z});
+  if (right_itr != all_chunks.cend()) {
+    const auto neighbor = right_itr->second;
+    neighbor->set_neighbor<face::left>(ptr);
+    ptr->set_neighbor<face::right>(neighbor);
+  }
+  const auto top_itr = all_chunks.find({x, y + 1, z});
+  if (top_itr != all_chunks.cend()) {
+    const auto neighbor = top_itr->second;
+    neighbor->set_neighbor<face::bottom>(ptr);
+    ptr->set_neighbor<face::top>(neighbor);
+  }
+  const auto bottom_itr = all_chunks.find({x, y - 1, z});
+  if (bottom_itr != all_chunks.cend()) {
+    const auto neighbor = bottom_itr->second;
+    neighbor->set_neighbor<face::top>(neighbor);
+    ptr->set_neighbor<face::bottom>(neighbor);
+  }
   renderer.on_chunk_insertion(key, *ptr);
+  all_chunks[key] = ptr;
+  assert(all_chunks.find(key) != all_chunks.end());
 }
 
 void chunk_manager::remove_chunk(const chunk_key &key) {
@@ -21,9 +70,13 @@ void chunk_manager::remove_chunk(const chunk_key &key) {
 }
 
 void chunk_manager::update() {
-
+  for (const auto &itr : all_chunks) {
+    if (itr.second->is_dirty()) {
+      renderer.on_chunk_update(itr.first, *itr.second);
+      itr.second->mark_clean();
+    }
+  }
 }
 
 } // namespace lexov
-
 

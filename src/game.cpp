@@ -2,7 +2,7 @@
 
 void fixed_timestep_game::load_content() {}
 
-void fixed_timestep_game::pre_update() {}
+void fixed_timestep_game::pre_update(const delta_time &) {}
 
 void fixed_timestep_game::post_update(const double) {}
 
@@ -23,7 +23,7 @@ void fixed_timestep_game::loop() {
     const auto frame_time = current_time - previous_time;
     previous_time = current_time;
     accumulator += frame_time;
-    pre_update();
+    pre_update(dt);
     while (accumulator > dt) {
       update(dt);
       accumulator -= dt;

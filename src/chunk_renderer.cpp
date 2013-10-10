@@ -1,12 +1,13 @@
 #include "chunk_renderer.hpp"
 #include "camera.hpp"
-
+#include <iostream>
 namespace lexov {
 
 const std::string chunk_renderer::cube_pos_attrib_name = "cube_pos";
 const std::string chunk_renderer::chunk_pos_uniform_name = "chunk_pos";
 const std::string chunk_renderer::normal_uniform_name = "normal";
 const std::string chunk_renderer::camera_pos_uniform_name = "vp_matrix";
+const std::string chunk_renderer::texture_uniform_name = "texture";
 
 chunk_renderer::chunk_renderer(mogl::program program)
     : shader_program{ std::move(program) } {
@@ -26,15 +27,36 @@ void chunk_renderer::update_ogl_ids() {
   normal_uniform_id = shader_program.get_uniform_location(normal_uniform_name);
   camera_pos_uniform_id =
       shader_program.get_uniform_location(camera_pos_uniform_name);
+  texture_uniform_id = shader_program.get_uniform_location(texture_uniform_name);
+  float colors[] = {
+    0.0f, 0.0f, 0.0f, 0.0f, // nothing
+    0.0f, 204.0f/255.0f, 51.0f/255.0f, 1.0f, // grass
+    87/255.0f, 59/255.0f, 12/255.0f, 1.0f, // dirty
+    0.0f, 0.0f, 1.0f, 1.0f, // water
+    50/255.0f, 50/255.0f, 50/255.0f, 1.0f, // stone
+  };
+  // generate a vbo for the colors data and a texture object
+  CHECKED_CALL(glGenBuffers(1, &texture_buffer));
+  CHECKED_CALL(glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer));
+  CHECKED_CALL(glBufferData(GL_TEXTURE_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW));
+  CHECKED_CALL(glGenTextures(1, &texture_id));
+
+  // bind the texture and then connect the vbo to the texture
+  CHECKED_CALL(glActiveTexture(GL_TEXTURE0));
+  CHECKED_CALL(glBindTexture(GL_TEXTURE_BUFFER, texture_id));
+  CHECKED_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, texture_buffer));
+  auto tmp = shader_program.scope_bind();
+  CHECKED_CALL(glUniform1i(texture_uniform_id, 0));
 }
 
 void chunk_renderer::render(const camera &cam) {
-  static const auto draw_face = [](const chunk_face_buffer & face) {
+  static const auto draw_face = [](const chunk_face_buffer &face) {
     face.vao.draw_arrays(mogl::draw_mode::triangles, 0,
                          face.number_of_vertices);
   };
 
   auto tmp = shader_program.scope_bind();
+  CHECKED_CALL(glActiveTexture(GL_TEXTURE0));
   // Set the camera matrix
   CHECKED_CALL(glUniformMatrix4fv(camera_pos_uniform_id, 1, GL_FALSE,
                      cam.get_view_projection()));
@@ -42,8 +64,9 @@ void chunk_renderer::render(const camera &cam) {
     const auto &pos = itr.first;
     const auto &mesh = itr.second;
     // Set the chunk position
-    CHECKED_CALL(glUniform3f(chunk_pos_uniform_id, std::get<0>(pos), std::get<1>(pos),
-                std::get<2>(pos)));
+    CHECKED_CALL(glUniform3f(
+        chunk_pos_uniform_id, std::get<0>(pos) * chunk_width,
+        std::get<1>(pos) * chunk_height, std::get<2>(pos) * chunk_depth));
     // Determine which faces we should draw, if any, for this chunk
     // Set the normal uniform before drawing
     if (cam.is_point_visible(chunk_width / 2, chunk_height, chunk_depth / 2)) {
@@ -79,8 +102,9 @@ void chunk_renderer::on_chunk_update(const chunk_key &key, const chunk &c) {
 }
 
 void chunk_renderer::on_chunk_insertion(const chunk_key &key, const chunk &c) {
-  auto itr = meshes.emplace(std::make_pair(key, chunk_mesh{}));
-  build_mesh(itr.first->second, c);
+  chunk_mesh m{};
+  build_mesh(m, c);
+  meshes.insert(std::make_pair(key, std::move(m)));
 }
 
 void chunk_renderer::on_chunk_removal(const chunk_key &key) {
@@ -106,9 +130,9 @@ void chunk_renderer::build_mesh(chunk_mesh &mesh, const chunk &c) {
   // through the voxels. If our underlying chunk uses a map to store voxel
   // information
   // then this is one dumb tripple loop
-  for (auto z = 0; z < chunk_depth; ++z) {
-    for (auto y = 0; y < chunk_height; ++y) {
-      for (auto x = 0; x < chunk_width; ++x) {
+  for (auto z = 0; z < chunk::depth; ++z) {
+    for (auto y = 0; y < chunk::height; ++y) {
+      for (auto x = 0; x < chunk::width; ++x) {
         const auto t = c.get(x, y, z);
         if (t == block_type::air) {
           continue;
@@ -160,7 +184,7 @@ void chunk_renderer::build_mesh(chunk_mesh &mesh, const chunk &c) {
         }
         if (c.is_face_visible<face::bottom>(x, y, z)) {
           bottom_data.emplace_back(x, y, z, t);
-          bottom_data.emplace_back(x, y + 1, z, t);
+          bottom_data.emplace_back(x, y, z+1, t);
           bottom_data.emplace_back(x + 1, y, z + 1, t);
 
           bottom_data.emplace_back(x + 1, y, z + 1, t);
