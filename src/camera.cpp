@@ -5,6 +5,8 @@
 namespace lexov {
 
 camera::camera(camera_properties properties) : properties_(properties) {
+  set_position(properties.eye[0], properties.eye[1], properties.eye[2]);
+  look_at(properties.look_at[0], properties.look_at[1], properties.look_at[2]);
 }
 
 std::array<float,3> camera::get_position() const { return vec3_to_array(position); }
@@ -34,9 +36,16 @@ void camera::offset_orientation(const float az, const float el) {
 }
 
 const float *camera::get_view_projection() const { 
-  update_projection_matrix();
-  update_view_matrix();
-  update_view_projection_matrix();
+  bool vp_needs_update = projection_dirty || view_dirty;
+  if (projection_dirty) {
+    update_projection_matrix();
+  }
+  if (view_dirty) {
+    update_view_matrix();
+  }
+  if (vp_needs_update) {
+    update_view_projection_matrix();
+  }
   return glm::value_ptr(view_projection);
 }
 
