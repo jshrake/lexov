@@ -2,7 +2,7 @@ lib_dirs=-L./../dep/glfw/lib -L./../dep/glew/lib
 include_dirs=-I./../dep/glfw/include -I./../dep/glew/include -I./../dep/mogl/include -I./../dep/
 
 CC=clang++
-CC_OPTIONS=-Wall -Werror -g -std=c++11 -stdlib=libc++ -DMOGL_DEBUG
+CC_OPTIONS=-Wall -Werror -O4 -std=c++11 -stdlib=libc++ -DMOGL_NO_RESTORE_CURRENTLY_BOUND
 
 OBJ=main.o camera.o chunk_generator.o chunk_manager.o chunk_renderer.o game.o lexov.o
 

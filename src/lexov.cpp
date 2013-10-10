@@ -9,9 +9,8 @@ game::game(GLFWwindow &window) : window_{ window } {
   glfwGetWindowSize(&window_, &window_width, &window_height);
   camera_properties cp;
   cp.aspect_ratio = window_width / (float)window_height;
-  cp.eye = { { 40.0f, 40.0f, 40.0f } };
-  cp.look_at = { { chunk_width / 2.0f, chunk_height / 2.0f,
-                   chunk_depth / 2.0f } };
+  cp.eye = { { chunk_width * world_width, chunk_height * world_height, chunk_depth * world_depth } };
+  cp.look_at = { { 0.0f, 0.0f, 0.0f} };
   cp.up = { { 0.0f, 1.0f, 0.0f } };
   cp.right = { { 1.0f, 0.0f, 0.0f } };
   cp.fov = 80.0f;

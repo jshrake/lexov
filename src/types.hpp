@@ -18,13 +18,13 @@ using local_size_t = std::uint_least8_t;
 using world_size_t = long long;
 using real = long double;
 
-constexpr const local_size_t chunk_width = 128;
+constexpr const local_size_t chunk_width = 16;
 constexpr const local_size_t chunk_height = 128;
-constexpr const local_size_t chunk_depth = 128;
+constexpr const local_size_t chunk_depth = 16;
 
-constexpr const local_size_t world_width = 3;
-constexpr const local_size_t world_height = 3;
-constexpr const local_size_t world_depth = 3;
+constexpr const local_size_t world_width = 16;
+constexpr const local_size_t world_height = 2;
+constexpr const local_size_t world_depth = 16;
 
 using chunk_key = std::tuple<world_size_t, world_size_t, world_size_t>;
 
