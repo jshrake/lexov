@@ -21,40 +21,47 @@ void chunk_manager::insert_chunk(const chunk_key &key, chunk_ptr ptr) {
   const auto x = std::get<0>(key);
   const auto y = std::get<1>(key);
   const auto z = std::get<2>(key);
+  // TODO(co): refactor the set neighbor code to not be junk
+  // Set front neighbor
   const auto front_itr = all_chunks.find({x, y, z - 1});
   if (front_itr != all_chunks.cend()) {
     const auto neighbor = front_itr->second;
     neighbor->set_neighbor<face::back>(ptr);
     ptr->set_neighbor<face::front>(neighbor);
   }
+  // Set back neighbor
   const auto back_itr = all_chunks.find({x, y, z + 1});
   if (back_itr != all_chunks.cend()) {
     const auto neighbor = back_itr->second;
     neighbor->set_neighbor<face::front>(ptr);
     ptr->set_neighbor<face::back>(neighbor);
   }
+  // Set left neighbor
   const auto left_itr = all_chunks.find({x - 1, y, z});
   if (left_itr != all_chunks.cend()) {
     const auto neighbor = left_itr->second;
     neighbor->set_neighbor<face::right>(ptr);
     ptr->set_neighbor<face::left>(neighbor);
   }
+  // Set right neighbor
   const auto right_itr = all_chunks.find({x + 1, y, z});
   if (right_itr != all_chunks.cend()) {
     const auto neighbor = right_itr->second;
     neighbor->set_neighbor<face::left>(ptr);
     ptr->set_neighbor<face::right>(neighbor);
   }
+  // Set top neighbor
   const auto top_itr = all_chunks.find({x, y + 1, z});
   if (top_itr != all_chunks.cend()) {
     const auto neighbor = top_itr->second;
     neighbor->set_neighbor<face::bottom>(ptr);
     ptr->set_neighbor<face::top>(neighbor);
   }
+  // Set bottom neighbor
   const auto bottom_itr = all_chunks.find({x, y - 1, z});
   if (bottom_itr != all_chunks.cend()) {
     const auto neighbor = bottom_itr->second;
-    neighbor->set_neighbor<face::top>(neighbor);
+    neighbor->set_neighbor<face::top>(ptr);
     ptr->set_neighbor<face::bottom>(neighbor);
   }
   renderer.on_chunk_insertion(key, *ptr);
