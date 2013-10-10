@@ -35,18 +35,10 @@ void chunk_renderer::update_ogl_ids() {
     0.0f, 0.0f, 1.0f, 1.0f, // water
     50/255.0f, 50/255.0f, 50/255.0f, 1.0f, // stone
   };
-  // generate a vbo for the colors data and a texture object
-  CHECKED_CALL(glGenBuffers(1, &texture_buffer));
-  CHECKED_CALL(glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer));
-  CHECKED_CALL(glBufferData(GL_TEXTURE_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW));
-  CHECKED_CALL(glGenTextures(1, &texture_id));
-
-  // bind the texture and then connect the vbo to the texture
-  CHECKED_CALL(glActiveTexture(GL_TEXTURE0));
-  CHECKED_CALL(glBindTexture(GL_TEXTURE_BUFFER, texture_id));
-  CHECKED_CALL(glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, texture_buffer));
-  auto tmp = shader_program.scope_bind();
-  CHECKED_CALL(glUniform1i(texture_uniform_id, 0));
+  tbo.data(colors);
+  mogl::active_texture(0);
+  tbo_texture.bind();
+  tbo.tex_buffer(GL_R32F);
 }
 
 void chunk_renderer::render(const camera &cam) {
@@ -55,8 +47,10 @@ void chunk_renderer::render(const camera &cam) {
                          face.number_of_vertices);
   };
 
-  auto tmp = shader_program.scope_bind();
-  CHECKED_CALL(glActiveTexture(GL_TEXTURE0));
+  auto shader_program_scope = shader_program.scope_bind();
+  mogl::active_texture(0);
+  tbo_texture.bind();
+  CHECKED_CALL(glUniform1i(texture_uniform_id, 0));
   // Set the camera matrix
   CHECKED_CALL(glUniformMatrix4fv(camera_pos_uniform_id, 1, GL_FALSE,
                      cam.get_view_projection()));
