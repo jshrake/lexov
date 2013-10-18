@@ -4,7 +4,8 @@
 #include <memory>
 namespace lexov {
 
-template <local_size_t W, local_size_t H = W, local_size_t D = W> class chunk_base {
+template <local_size_t W, local_size_t H = W, local_size_t D = W>
+class chunk_base {
 public:
   static constexpr local_size_t width = W;
   static constexpr local_size_t height = H;
@@ -57,23 +58,25 @@ private:
   weak_chunk_ptr bottom_neighbor;
 
   mutable bool dirty{ false };
+  decltype(volume) number_of_solid_blocks{ 0 };
 };
 
 template <local_size_t W, local_size_t H, local_size_t D>
 block_type chunk_base<W, H, D>::get(const local_size_t x, const local_size_t y,
-                               const local_size_t z) const {
+                                    const local_size_t z) const {
   return get_impl(x, y, z);
 }
 
 template <local_size_t W, local_size_t H, local_size_t D>
 void chunk_base<W, H, D>::set(const local_size_t x, const local_size_t y,
-                         const local_size_t z, const block_type type) {
+                              const local_size_t z, const block_type type) {
   set_impl(x, y, z, type);
   static const auto mark_neighbor_dirty = [](const weak_chunk_ptr & ptr) {
     if (auto neighbor = ptr.lock()) {
       neighbor->mark_dirty();
     }
-  };
+  }
+  ;
   // If we made a change to a border cube, mark the bordering neighbor as dirty
   if (dirty) {
     if (x == 0) {
@@ -98,20 +101,22 @@ void chunk_base<W, H, D>::set(const local_size_t x, const local_size_t y,
 
 template <local_size_t W, local_size_t H, local_size_t D>
 bool chunk_base<W, H, D>::is_solid(const local_size_t x, const local_size_t y,
-                              const local_size_t z) const {
+                                   const local_size_t z) const {
   return is_solid_impl(x, y, z);
 }
 
 template <local_size_t W, local_size_t H, local_size_t D>
-bool chunk_base<W, H, D>::is_transparent(const local_size_t x, const local_size_t y,
-                              const local_size_t z) const {
+bool chunk_base<W, H, D>::is_transparent(const local_size_t x,
+                                         const local_size_t y,
+                                         const local_size_t z) const {
   return is_transparent_impl(x, y, z);
 }
 
 template <local_size_t W, local_size_t H, local_size_t D>
 template <face face>
-bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size_t y,
-                                     const local_size_t z) const {
+bool chunk_base<W, H, D>::is_face_visible(const local_size_t x,
+                                          const local_size_t y,
+                                          const local_size_t z) const {
   if (!is_solid(x, y, z)) {
     return false;
   }
@@ -123,7 +128,8 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
     } else {
       return true;
     }
-  };
+  }
+  ;
   switch (face) {
   case face::front:
     if (z == 0) {
@@ -147,19 +153,19 @@ bool chunk_base<W, H, D>::is_face_visible(const local_size_t x, const local_size
     if (x == width - 1) {
       return check_neighbor(right_neighbor, 0, y, z);
     } else {
-      return !is_solid(x + 1, y, z) || is_transparent(x+1, y, z);
+      return !is_solid(x + 1, y, z) || is_transparent(x + 1, y, z);
     }
   case face::top:
     if (y == height - 1) {
       return check_neighbor(top_neighbor, x, 0, z);
     } else {
-      return !is_solid(x, y + 1, z) || is_transparent(x, y+1, z);
+      return !is_solid(x, y + 1, z) || is_transparent(x, y + 1, z);
     }
   case face::bottom:
     if (y == 0) {
       return check_neighbor(bottom_neighbor, x, height - 1, z);
     } else {
-      return !is_solid(x, y - 1, z) || is_transparent(x, y-1, z);
+      return !is_solid(x, y - 1, z) || is_transparent(x, y - 1, z);
     }
   }
 }

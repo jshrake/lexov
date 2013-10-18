@@ -16,7 +16,17 @@ struct camera_properties {
   float rotation_rate;
   float zoom_rate;
 };
+inline glm::vec3 array_to_vec3(const std::array<float, 3> &a) {
+  return glm::vec3{a[0], a[1], a[2]};
+}
 
+inline std::array<float, 3> vec3_to_array(const glm::vec3 &v) {
+  return {{v.x, v.y, v.z}};
+}
+
+inline std::array<float, 4> vec4_to_array(const glm::vec4 &v) {
+  return {{v.x/v.w, v.y/v.w, v.z/v.w, v.w}};
+}
 class camera {
 public:
   camera(camera_properties properties);
@@ -27,9 +37,17 @@ public:
   void move_up(const float dy);
   void offset_orientation(const float az, const float el);
   void look_at(const float x, const float y, const float z);
-  const float *get_view_projection() const;
-  bool is_point_visible(const float x, const float y, const float z) const;
+  float *get_view_projection() const;
+  float *get_view_matrix() const;
   void on_viewport_resize(const std::size_t width, const std::size_t height);
+
+  template <class T>
+  std::array<float, 4>
+  world_to_clip(const std::array<T, 3> &position) const {
+    glm::vec4 p{position[0], position[1], position[2], 1.0f};
+    update_view_projection_matrix();
+    return vec4_to_array(view_projection * p);
+  }
 
 private:
   void offset_position(const glm::vec3 &p);
@@ -53,13 +71,7 @@ private:
   mutable bool view_dirty{true};
 };
 
-inline glm::vec3 array_to_vec3(const std::array<float, 3> a) {
-  return glm::vec3{a[0], a[1], a[2]};
-}
 
-inline std::array<float, 3> vec3_to_array(const glm::vec3 v) {
-  return {{v.x, v.y, v.z}};
-}
 
 
 } // namespace lexov

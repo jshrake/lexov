@@ -21,7 +21,7 @@ int main() {
     glfwWindowHint(GLFW_GREEN_BITS, 8);
     glfwWindowHint(GLFW_BLUE_BITS, 8);
     glfwWindowHint(GLFW_ALPHA_BITS, 8);
-    glfwWindowHint(GLFW_DEPTH_BITS, 16);
+    glfwWindowHint(GLFW_DEPTH_BITS, 32);
     auto window = glfwCreateWindow(
         width, height, title, fullscreen ? glfwGetPrimaryMonitor() : nullptr,
         nullptr);

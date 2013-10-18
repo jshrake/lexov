@@ -1,5 +1,6 @@
 #pragma once
 #include "utility.hpp"
+#include <array>
 #include <cstdint>
 #include <tuple>
 
@@ -22,9 +23,18 @@ constexpr const local_size_t chunk_width = 16;
 constexpr const local_size_t chunk_height = 128;
 constexpr const local_size_t chunk_depth = 16;
 
-constexpr const local_size_t world_width = 16;
-constexpr const local_size_t world_height = 2;
-constexpr const local_size_t world_depth = 16;
+constexpr const local_size_t half_chunk_width = chunk_width / 2;
+constexpr const local_size_t half_chunk_height = chunk_height / 2;
+constexpr const local_size_t half_chunk_depth = chunk_depth / 2;
+
+constexpr const local_size_t chunk_diameter =
+    isqrt(half_chunk_width * half_chunk_width +
+          half_chunk_height * half_chunk_height +
+          half_chunk_depth * half_chunk_depth);
+
+constexpr const local_size_t world_width = 32;
+constexpr const local_size_t world_height = 3;
+constexpr const local_size_t world_depth = 32;
 
 using chunk_key = std::tuple<world_size_t, world_size_t, world_size_t>;
 
@@ -40,9 +50,7 @@ struct chunk_hash final {
 
 struct chunk_hash_equal final {
 bool operator()(const chunk_key &lhs, const chunk_key &rhs) const {
-  return std::get<0>(lhs) == std::get<0>(rhs) &&
-         std::get<1>(lhs) == std::get<1>(rhs) &&
-         std::get<2>(lhs) == std::get<2>(rhs);
+  return lhs == rhs; 
   }
 };
 

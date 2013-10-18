@@ -1,6 +1,7 @@
 #include "chunk_generator.hpp"
 #include <memory>
 #include <random>
+#include <thread>
 
 namespace {
 float grad[12][3] = { { 1.0, 1.0, 0.0 }, { -1.0, 1.0, 0.0 }, { 1.0, -1.0, 0.0 },
@@ -237,20 +238,22 @@ chunk_ptr chunk_generator::make_pyramid() {
   return shared_chunk;
 }
 
-chunk_ptr chunk_generator::make_floating_rock(const chunk_key &key) {
+std::tuple<chunk_key, chunk_ptr>
+chunk_generator::make_floating_rock(const chunk_key key) {
   std::random_device rd;
   std::default_random_engine e{ rd() };
-  std::uniform_real_distribution<> dirt_dist(.4,.7);
+  std::uniform_real_distribution<> dirt_dist(.4, .7);
   std::uniform_real_distribution<> grass_dist(.8, .9);
   const auto world_x = std::get<0>(key) * chunk_width;
   const auto world_y = std::get<1>(key) * chunk_height;
   const auto world_z = std::get<2>(key) * chunk_depth;
-  const static auto build_rock = [&dirt_dist, &grass_dist, &e, &world_x, &world_y, &world_z](
-      chunk & c, local_size_t x, local_size_t y,
-      local_size_t z) {
+  thread_local const auto build_rock =
+      [&dirt_dist, &grass_dist, &e, &world_x, &world_y, &world_z](
+          chunk & c, local_size_t x, local_size_t y, local_size_t z) {
     float caves, center_falloff, plateau_falloff, density;
-    float xf = (world_x + x) / ((float)world_width*chunk_width), yf = (world_y + y) / ((float)world_height*chunk_height),
-          zf = (world_z + z) / ((float)world_depth*chunk_depth);
+    float xf = (world_x + x) / ((float)world_width * chunk_width),
+          yf = (world_y + y) / ((float)world_height * chunk_height),
+          zf = (world_z + z) / ((float)world_depth * chunk_depth);
     if (yf <= 0.8) {
       plateau_falloff = 1.0;
     } else if (0.8 < yf && yf < 0.9) {
@@ -258,7 +261,6 @@ chunk_ptr chunk_generator::make_floating_rock(const chunk_key &key) {
     } else {
       plateau_falloff = 0.0;
     }
-
 
     caves = pow(simplex_noise(1, xf * 5, yf * 5, zf * 5), 3);
     if (caves < 0.5) {
@@ -288,6 +290,7 @@ chunk_ptr chunk_generator::make_floating_rock(const chunk_key &key) {
   ;
   auto shared_chunk = std::make_shared<chunk>();
   for_each_voxel(*shared_chunk, build_rock);
-  return shared_chunk;
+  return {key, shared_chunk};
 }
+
 } // namespace lexov

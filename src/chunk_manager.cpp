@@ -2,17 +2,25 @@
 #include "chunk_generator.hpp"
 #include "chunk_renderer.hpp"
 #include <cassert>
+#include <thread>
+#include <future>
+#include <vector>
 
 namespace lexov {
 chunk_manager::chunk_manager(chunk_renderer &cr) : renderer{ cr } {
+  std::vector<std::future<std::tuple<chunk_key, chunk_ptr>>> chunk_futures;
+  chunk_futures.reserve(world_depth * world_height * world_depth);
   for (world_size_t z = 0; z < world_depth; ++z) {
     for (world_size_t y = 0; y < world_height; ++y) {
       for (world_size_t x = 0; x < world_width; ++x) {
         const auto k = chunk_key{x, y, z};
-        insert_chunk(k,
-                     chunk_generator::make_floating_rock(k));
+        chunk_futures.push_back(std::async(std::launch::async, chunk_generator::make_floating_rock, k));
       }
     }
+  }
+  for (auto &f : chunk_futures) {
+    auto res = f.get();
+    insert_chunk(std::get<0>(res), std::get<1>(res));
   }
 }
 
@@ -71,12 +79,20 @@ void chunk_manager::insert_chunk(const chunk_key &key, chunk_ptr ptr) {
 
 void chunk_manager::remove_chunk(const chunk_key &key) {
   if (auto itr = all_chunks.find(key) != all_chunks.end()) {
-    all_chunks.erase(itr);
     renderer.on_chunk_removal(key);
+    all_chunks.erase(itr);
   }
 }
 
-void chunk_manager::update() {
+void chunk_manager::update(const world_size_t , const world_size_t , const world_size_t ) {
+  // Determine chunks that need building based on camera position + lookat
+  //  - vector / queue / priority queue of chunk keys
+  // add work to the build -> mesh -> insert pipeline
+  //  - build chunk, store result in manager (concurrent datastructure for storage)
+  //  - mesh chunk, store result in renderer (concurrent datastructure for storage)
+  // Determine chunks that need removal
+  //  - remove chunks from manager
+  //  - remove chunks from renderer
   for (const auto &itr : all_chunks) {
     if (itr.second->is_dirty()) {
       renderer.on_chunk_update(itr.first, *itr.second);
@@ -84,6 +100,20 @@ void chunk_manager::update() {
     }
   }
 }
-
+auto chunk_manager::get_total_number_of_solid_blocks() const -> decltype(
+    chunk::volume) {
+    std::size_t count = 0;
+    for (auto &c : all_chunks) {
+      std::size_t chunk_solid_count = 0;
+      static const auto solid_counter = [&chunk_solid_count](const chunk &c, const local_size_t x, const local_size_t y, const local_size_t z) {
+        if (c.is_solid(x, y, z)) {
+          ++chunk_solid_count;
+        }
+      };
+      for_each_voxel(*c.second, solid_counter);
+      count += chunk_solid_count;
+    }
+    return count;
+  }
 } // namespace lexov
 

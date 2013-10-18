@@ -1,6 +1,7 @@
 #include "lexov.hpp"
 #include <mogl/mogl.hpp>
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 namespace lexov {
 
@@ -9,7 +10,7 @@ game::game(GLFWwindow &window) : window_{ window } {
   glfwGetWindowSize(&window_, &window_width, &window_height);
   camera_properties cp;
   cp.aspect_ratio = window_width / (float)window_height;
-  cp.eye = { { chunk_width * world_width, chunk_height * world_height, chunk_depth * world_depth } };
+  cp.eye = { { world_width * chunk_width, world_height * chunk_height, world_depth * chunk_depth } };
   cp.look_at = { { 0.0f, 0.0f, 0.0f} };
   cp.up = { { 0.0f, 1.0f, 0.0f } };
   cp.right = { { 1.0f, 0.0f, 0.0f } };
@@ -32,12 +33,15 @@ game::game(GLFWwindow &window) : window_{ window } {
   glfwSetCursorPos(&window_, window_height/2.0f, window_width/2.0f);
   glEnable (GL_BLEND);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glClearColor(135.0/255.0f, 100/255.0f, 250/255.0f, 1.0f);
+  glClearColor(0/255.0f, 191/255.0f, 255/255.0f, 1.0f);
 }
 
 void game::load_content() {}
 
-void game::update(const delta_time &) { manager_->update(); }
+void game::update(const delta_time &) { 
+  const auto pos = camera_->get_position();
+  manager_->update(pos[0], pos[1], pos[2]);
+}
 
 void game::draw() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -47,7 +51,7 @@ void game::draw() {
 
 void game::pre_update(const delta_time &dt) {
   glfwPollEvents();
-  auto dur = dt.count() * 0.5f;
+  auto dur = dt.count();
   if (glfwGetKey(&window_, GLFW_KEY_A) == GLFW_PRESS) {
     camera_->move_right(-dur);
   }
@@ -68,6 +72,10 @@ void game::pre_update(const delta_time &dt) {
   }
   if (glfwGetKey(&window_, GLFW_KEY_ESCAPE)) {
     glfwSetWindowShouldClose(&window_, true);
+  }
+  if (glfwGetKey(&window_, GLFW_KEY_SPACE)) {
+    std::cout << "Total # of solid blocks: " << manager_->get_total_number_of_solid_blocks() << std::endl;
+    std::cout << "Total # of vertices: " << renderer_->get_total_number_of_vertices() << std::endl;
   }
 
   if (glfwGetMouseButton(&window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {

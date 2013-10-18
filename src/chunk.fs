@@ -1,7 +1,8 @@
 #version 410
 
-in vec4 f_color;
-uniform vec3 normal;
+in vec4 f_world_pos;
+in float f_depth;
+uniform samplerBuffer texture;
 out vec4 out_color;
 
 struct SHC{
@@ -69,6 +70,28 @@ vec3 sh_light(vec3 normal, SHC l){
     );
 }
 
+vec3 fog(vec3 color, vec3 fcolor, float depth, float density){
+    const float e = 2.71828182845904523536028747135266249;
+    float f = pow(e, -pow(depth*density, 2));
+    return mix(fcolor, color, f);
+}
+
+vec3 gamma(vec3 color){
+    return pow(color, vec3(1.0/2.0));
+}
+
 void main() {
+  vec3 normal = normalize(cross(dFdy(f_world_pos.xyz), dFdx(f_world_pos.xyz)));
+  int ind    = int(f_world_pos.w);
+  int offset = 4 * ind; 
+  if (abs(normal.y - 1.0) < 1e-5 && ind == 2) {
+    offset = 4;
+  }
+  float r = texelFetch(texture, offset + 0).r;
+  float g = texelFetch(texture, offset + 1).r;
+  float b = texelFetch(texture, offset + 2).r;
+  float a = texelFetch(texture, offset + 3).r;
+  vec4 f_color = vec4(r, g, b, a);
   out_color = vec4(f_color.rgb * sh_light(normal, beach) * .5, f_color.a); 
+  out_color.xyz = gamma(fog(out_color.xyz, vec3(0.8), f_depth, 0.0009));
 }
