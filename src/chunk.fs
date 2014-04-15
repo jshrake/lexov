@@ -2,7 +2,7 @@
 
 in vec4 f_world_pos;
 in float f_depth;
-uniform samplerBuffer texture;
+uniform samplerBuffer my_texture;
 out vec4 out_color;
 
 struct SHC{
@@ -87,10 +87,10 @@ void main() {
   if (abs(normal.y - 1.0) < 1e-5 && ind == 2) {
     offset = 4;
   }
-  float r = texelFetch(texture, offset + 0).r;
-  float g = texelFetch(texture, offset + 1).r;
-  float b = texelFetch(texture, offset + 2).r;
-  float a = texelFetch(texture, offset + 3).r;
+  float r = texelFetch(my_texture, offset + 0).r;
+  float g = texelFetch(my_texture, offset + 1).r;
+  float b = texelFetch(my_texture, offset + 2).r;
+  float a = texelFetch(my_texture, offset + 3).r;
   vec4 f_color = vec4(r, g, b, a);
   out_color = vec4(f_color.rgb * sh_light(normal, beach) * .5, f_color.a); 
   out_color.xyz = gamma(fog(out_color.xyz, vec3(0.8), f_depth, 0.0009));

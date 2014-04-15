@@ -7,7 +7,7 @@ const std::string chunk_renderer::cube_pos_attrib_name = "cube_pos";
 const std::string chunk_renderer::chunk_pos_uniform_name = "chunk_pos";
 const std::string chunk_renderer::normal_uniform_name = "normal";
 const std::string chunk_renderer::camera_pos_uniform_name = "vp_matrix";
-const std::string chunk_renderer::texture_uniform_name = "texture";
+const std::string chunk_renderer::texture_uniform_name = "my_texture";
 const std::string chunk_renderer::view_matrix_name = "v_matrix";
 
 chunk_renderer::chunk_renderer(mogl::program program)
