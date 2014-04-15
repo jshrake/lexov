@@ -1,6 +1,6 @@
 [submodule "dep/soil"]
 	path = dep/soil
-	url = https://github.com/cosmicorganism/soil
+	url = https://github.com/jshrake/soil
         ignore = dirty 
 [submodule "dep/glm"]
 	path = dep/glm
@@ -12,7 +12,7 @@
         ignore = dirty 
 [submodule "dep/mogl"]
 	path = dep/mogl
-	url = file:////Users/justin/dev/mogl
+  url = https://github.com/mogl/mogl
         ignore = dirty 
 [submodule "dep/glew"]
 	path = dep/glew
