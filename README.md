@@ -2,7 +2,7 @@
 
 lexov is an experiment to explore rendering procedurally generated voxel terrains with C++11 and modern OpenGL.
 
-Enjoy some images of the engine rendering a procedurally generated island ([source](http://codeflow.org/entries/2010/dec/09/minecraft-like-rendering-experiments-in-opengl-4/))
+Here are some images of the engine rendering the procedurally generated island from ([this wonderful codeflow article](http://codeflow.org/entries/2010/dec/09/minecraft-like-rendering-experiments-in-opengl-4/)). I've modified the code to generate arbitrarily large islands generated over multiple chunks.
 
 ![Imgur](http://i.imgur.com/6EWs3PX.png)
 
