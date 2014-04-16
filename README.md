@@ -9,3 +9,11 @@ Here are some images of the engine rendering the procedurally generated rock fro
 ![Imgur](http://i.imgur.com/FItlAW9.png)
 
 ![Imgur](http://i.imgur.com/CkhbPPS.png)
+
+Here are some cool pyramids:
+
+![Imgur](http://i.imgur.com/zuexSuB.png)
+
+![Imgur](http://i.imgur.com/Im8vQpC.png)
+
+![Imgur](http://i.imgur.com/KjWpMJC.png)
